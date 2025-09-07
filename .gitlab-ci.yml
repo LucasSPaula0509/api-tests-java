@@ -1,0 +1,33 @@
+image: maven:3.9-eclipse-temurin-17
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  BASE_URL: "https://dummyjson.com"
+
+cache:
+  paths:
+    - .m2/repository
+
+stages:
+  - test
+  - report
+
+run-tests:
+  stage: test
+  script:
+    - mvn -q -DbaseUrl=$BASE_URL test
+  artifacts:
+    when: always
+    paths:
+      - target/allure-results
+      - target/surefire-reports
+
+allure-report:
+  stage: report
+  needs: ["run-tests"]
+  script:
+    - mvn -q allure:report
+  artifacts:
+    when: always
+    paths:
+      - target/site/allure-maven-plugin

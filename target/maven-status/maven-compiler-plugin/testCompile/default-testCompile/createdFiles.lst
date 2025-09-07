@@ -1,0 +1,12 @@
+tests\HealthTest.class
+util\AuthClient.class
+util\ProductClient.class
+models\ProductRequest.class
+util\Env.class
+models\LoginResponse.class
+tests\AuthProductsTest.class
+tests\AuthFlowTest.class
+base\BaseApiTest.class
+models\LoginRequest.class
+util\UserClient.class
+tests\ProductsCrudTest.class
