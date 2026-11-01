@@ -31,6 +31,9 @@
     <google-java-format.version>1.36.0</google-java-format.version>
 
     <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+    <!-- Filtro padrão por tag do JUnit: -Dgroups=smoke, -Dgroups=defeito -DexcludedGroups=none -->
+    <groups></groups>
+    <excludedGroups>defeito</excludedGroups>
   </properties>
 
   <dependencyManagement>
@@ -119,6 +122,8 @@
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <argLine>-Dfile.encoding=UTF-8</argLine>
+          <groups>${groups}</groups>
+          <excludedGroups>${excludedGroups}</excludedGroups>
           <systemPropertyVariables>
             <allure.results.directory>${allure.results.directory}</allure.results.directory>
           </systemPropertyVariables>
