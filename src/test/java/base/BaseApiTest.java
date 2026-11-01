@@ -7,15 +7,16 @@ import util.Env;
 
 public abstract class BaseApiTest {
 
-    @BeforeAll
-    static void setup() {
-        RestAssured.baseURI = Env.baseUrl();
-    }
+  @BeforeAll
+  static void setup() {
+    RestAssured.baseURI = Env.baseUrl();
+  }
 
-    @Step("Bearer setado no Rest-Assured")
-    protected void setBearer(String token) {
-        RestAssured.requestSpecification = RestAssured.given()
-                .header("Authorization", "Bearer " + token)
-                .header("Content-Type", "application/json");
-    }
+  @Step("Bearer setado no Rest-Assured")
+  protected void setBearer(String token) {
+    RestAssured.requestSpecification =
+        RestAssured.given()
+            .header("Authorization", "Bearer " + token)
+            .header("Content-Type", "application/json");
+  }
 }

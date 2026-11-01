@@ -1,18 +1,18 @@
-t# Maven
- /target
- !.mvn/wrapper/maven-wrapper.jar
+# Build
+target/
+.mvn/wrapper/maven-wrapper.jar
 
- # IntelliJ
- .idea/
- *.iml
- /out
-
- # OS
- .DS_Store
- Thumbs.db
-
-# Allure reports
-.allure/
+# Relatórios gerados
 allure-report/
 allure-results/
+.allure/
 
+# IDEs
+.idea/
+*.iml
+/out/
+.vscode/
+
+# SO
+.DS_Store
+Thumbs.db
