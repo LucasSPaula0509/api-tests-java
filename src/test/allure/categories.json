@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Defeitos conhecidos",
+    "description": "Testes @defeito que continuam falhando enquanto a divergência da documentação existir",
+    "matchedStatuses": ["failed", "broken"],
+    "messageRegex": "(?s)\\[Defeito conhecido .*"
+  },
+  {
+    "name": "Falhas de infraestrutura/rede",
+    "description": "Erros de conexão, timeout ou exceções antes da validação",
+    "matchedStatuses": ["broken"]
+  },
+  {
+    "name": "Falhas de asserção",
+    "description": "A API diverge do resultado esperado no teste",
+    "matchedStatuses": ["failed"]
+  }
+]
