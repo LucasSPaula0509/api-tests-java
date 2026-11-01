@@ -1,0 +1,169 @@
+name: Testes de API
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 12 * * *" # 09:00 BRT
+  workflow_dispatch:
+    inputs:
+      groups:
+        description: Tags do JUnit para a regressão (vazio = todas, exceto defeito)
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  MAVEN_ARGS: -B -ntp
+
+jobs:
+  smoke:
+    name: Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Executar smoke
+        run: ./mvnw clean test -Dgroups=smoke
+      - name: Publicar allure-results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-smoke
+          path: target/allure-results
+          if-no-files-found: ignore
+
+  regression:
+    name: Regressão
+    needs: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Executar regressão
+        env:
+          GROUPS: ${{ inputs.groups }}
+        run: ./mvnw clean test -Dgroups="$GROUPS"
+      - name: Publicar allure-results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-regression
+          path: target/allure-results
+          if-no-files-found: ignore
+      - name: Publicar relatórios do surefire
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+          if-no-files-found: ignore
+
+  known-defects:
+    name: Defeitos conhecidos (@defeito)
+    needs: regression
+    # Roda mesmo se a regressão falhar: acompanha as divergências da documentação.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Estes testes devem falhar enquanto a divergência existir.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Executar @defeito
+        run: ./mvnw clean test -Dgroups=defeito -DexcludedGroups=none
+      - name: Publicar allure-results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-results-known-defects
+          path: target/allure-results
+          if-no-files-found: ignore
+
+  report:
+    name: Allure Report
+    needs: [smoke, regression, known-defects]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      PUBLISH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+      REPORT_URL: https://lucasspaula0509.github.io/api-tests-java/
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Juntar allure-results dos jobs
+        uses: actions/download-artifact@v8
+        with:
+          pattern: allure-results-*
+          path: target/allure-results
+          merge-multiple: true
+      - name: Recuperar histórico do report anterior
+        uses: actions/checkout@v7
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Preparar histórico e executor
+        run: |
+          mkdir -p target/allure-results
+          if [ -d gh-pages/history ]; then
+            cp -r gh-pages/history target/allure-results/history
+          fi
+          cat > target/allure-results/executor.json <<EOF
+          {
+            "name": "GitHub Actions",
+            "type": "github",
+            "url": "${{ github.server_url }}/${{ github.repository }}/actions",
+            "buildOrder": ${{ github.run_number }},
+            "buildName": "${{ github.workflow }} #${{ github.run_number }}",
+            "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "reportUrl": "${REPORT_URL}",
+            "reportName": "DummyJSON API - Allure Report"
+          }
+          EOF
+      - name: Gerar Allure Report
+        run: ./mvnw allure:report
+      - name: Publicar report como artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: allure-report
+          path: target/site/allure-maven-plugin
+      - name: Publicar no GitHub Pages
+        if: env.PUBLISH == 'true'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: target/site/allure-maven-plugin
+          publish_branch: gh-pages
+          force_orphan: true
+          commit_message: "Allure Report - ${{ github.workflow }} #${{ github.run_number }}"

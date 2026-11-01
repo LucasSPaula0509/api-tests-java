@@ -1,7 +1,8 @@
-image: maven:3.9-eclipse-temurin-17
+image: maven:3.9-eclipse-temurin-21
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_ARGS: "-B -ntp"
   BASE_URL: "https://dummyjson.com"
 
 cache:
@@ -12,21 +13,46 @@ stages:
   - test
   - report
 
-run-tests:
+smoke:
   stage: test
   script:
-    - mvn -q -DbaseUrl=$BASE_URL test
+    - ./mvnw clean test -Dgroups=smoke
+  artifacts:
+    when: always
+    paths:
+      - target/allure-results
+
+regression:
+  stage: test
+  needs: ["smoke"]
+  script:
+    - ./mvnw clean test
   artifacts:
     when: always
     paths:
       - target/allure-results
       - target/surefire-reports
 
+# Divergências conhecidas da documentação: falham enquanto existirem, sem quebrar o pipeline.
+known-defects:
+  stage: test
+  needs: ["regression"]
+  allow_failure: true
+  script:
+    - ./mvnw clean test -Dgroups=defeito -DexcludedGroups=none
+  artifacts:
+    when: always
+    paths:
+      - target/allure-results
+
 allure-report:
   stage: report
-  needs: ["run-tests"]
+  when: always
+  needs:
+    - job: regression
+      artifacts: true
   script:
-    - mvn -q allure:report
+    - ./mvnw allure:report
   artifacts:
     when: always
     paths:
