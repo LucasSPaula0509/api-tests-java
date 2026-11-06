@@ -1,0 +1,41 @@
+<div>POST to https://dummyjson.com/products/add</div>
+
+    <h4>Body</h4>
+    <div>
+    <pre class="preformated-text">
+{
+    &quot;title&quot;: &quot;Perfume Oil&quot;,
+    &quot;description&quot;: &quot;Mega Discount, Impression of A...&quot;,
+    &quot;price&quot;: 13.0,
+    &quot;discountPercentage&quot;: 8.4,
+    &quot;rating&quot;: 4.26,
+    &quot;stock&quot;: 65,
+    &quot;brand&quot;: &quot;Impression of Acqua Di Gio&quot;,
+    &quot;category&quot;: &quot;fragrances&quot;,
+    &quot;thumbnail&quot;: &quot;https://i.dummyjson.com/data/products/11/thumnail.jpg&quot;
+}    </pre>
+    </div>
+
+    <h4>Headers</h4>
+    <div>
+            <div>Accept: application/json, application/javascript, text/javascript, text/json</div>
+            <div>Content-Type: application/json</div>
+    </div>
+
+
+
+    <h4>Curl</h4>
+    <div>
+        curl -v -X POST &#39;https://dummyjson.com/products/add&#39; -H &#39;Accept: application/json, application/javascript, text/javascript, text/json&#39; -H &#39;Content-Type: application/json&#39; -d &#39;{
+    &quot;title&quot;: &quot;Perfume Oil&quot;,
+    &quot;description&quot;: &quot;Mega Discount, Impression of A...&quot;,
+    &quot;price&quot;: 13.0,
+    &quot;discountPercentage&quot;: 8.4,
+    &quot;rating&quot;: 4.26,
+    &quot;stock&quot;: 65,
+    &quot;brand&quot;: &quot;Impression of Acqua Di Gio&quot;,
+    &quot;category&quot;: &quot;fragrances&quot;,
+    &quot;thumbnail&quot;: &quot;https://i.dummyjson.com/data/products/11/thumnail.jpg&quot;
+}&#39;
+    </div>
+
